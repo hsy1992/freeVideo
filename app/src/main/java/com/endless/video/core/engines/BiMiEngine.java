@@ -1,10 +1,7 @@
 package com.endless.video.core.engines;
 
-import static com.umeng.analytics.pro.c.I;
-
 import com.blankj.utilcode.util.EncodeUtils;
 import com.blankj.utilcode.util.EncryptUtils;
-import com.blankj.utilcode.util.ResourceUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ViewUtils;

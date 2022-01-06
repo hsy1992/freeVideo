@@ -8,6 +8,7 @@ import com.blankj.utilcode.util.MapUtils;
 import com.blankj.utilcode.util.ObjectUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.endless.video.core.bean.ConfigDTO;
+import com.endless.video.core.bean.vo.AnimeMetaVO;
 import com.endless.video.core.engines.AFangEngine;
 import com.endless.video.core.engines.AgeFansEngine;
 import com.endless.video.core.engines.BiMiEngine;
@@ -16,6 +17,7 @@ import com.endless.video.core.engines.K4YaEngine;
 import com.endless.video.core.engines.LibVioEngine;
 import com.endless.video.core.engines.YingHuaEngine;
 import com.endless.video.core.engines.ZzzFunEngine;
+import com.endless.video.core.engines.interfaces.ISearchCallback;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -100,5 +102,15 @@ public class CoreEngine {
             e.printStackTrace();
         }
         return engineList;
+    }
+
+    private void searchKeywords(String keyword) {
+        if (CollectionUtils.isNotEmpty(currentEngineList)) {
+            for (IResourcesEngine resourcesEngine : currentEngineList) {
+                resourcesEngine.search(keyword, metaVoList -> {
+
+                });
+            }
+        }
     }
 }

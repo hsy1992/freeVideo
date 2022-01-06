@@ -1,7 +1,5 @@
 package com.endless.video.core.engines;
 
-import static com.scwang.smart.refresh.layout.constant.RefreshState.None;
-
 import com.blankj.utilcode.util.EncryptUtils;
 import com.blankj.utilcode.util.StringUtils;
 import com.endless.video.core.CoreConstants;
