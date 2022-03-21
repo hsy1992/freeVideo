@@ -10,20 +10,23 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.alibaba.fastjson.JSON;
+import com.endless.video.core.bean.ApiResponse;
+import com.endless.video.http.api.AppRegisterApi;
 import com.gyf.immersionbar.ImmersionBar;
 import com.hjq.base.BaseActivity;
 import com.endless.video.R;
 import com.endless.video.aop.Log;
 import com.endless.video.aop.SingleClick;
 import com.endless.video.app.AppActivity;
-import com.endless.video.http.api.GetCodeApi;
-import com.endless.video.http.api.RegisterApi;
-import com.endless.video.http.model.HttpData;
 import com.endless.video.manager.InputTextManager;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.widget.view.CountdownView;
 import com.hjq.widget.view.SubmitButton;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.Call;
 
@@ -91,7 +94,6 @@ public final class RegisterActivity extends AppActivity
 
         InputTextManager.with(this)
                 .addView(mPhoneView)
-                .addView(mCodeView)
                 .addView(mFirstPassword)
                 .addView(mSecondPassword)
                 .setMain(mCommitView)
@@ -128,27 +130,28 @@ public final class RegisterActivity extends AppActivity
             // 隐藏软键盘
             hideKeyboard(getCurrentFocus());
 
-            if (true) {
-                mCommitView.showProgress();
-                postDelayed(() -> {
-                    mCommitView.showSucceed();
-                    postDelayed(() -> {
-                        setResult(RESULT_OK, new Intent()
-                                .putExtra(INTENT_KEY_PHONE, mPhoneView.getText().toString())
-                                .putExtra(INTENT_KEY_PASSWORD, mFirstPassword.getText().toString()));
-                        finish();
-                    }, 1000);
-                }, 2000);
-                return;
-            }
+//            if (true) {
+//                mCommitView.showProgress();
+//                postDelayed(() -> {
+//                    mCommitView.showSucceed();
+//                    postDelayed(() -> {
+//                        setResult(RESULT_OK, new Intent()
+//                                .putExtra(INTENT_KEY_PHONE, mPhoneView.getText().toString())
+//                                .putExtra(INTENT_KEY_PASSWORD, mFirstPassword.getText().toString()));
+//                        finish();
+//                    }, 1000);
+//                }, 2000);
+//                return;
+//            }
 
             // 提交注册
+            Map<String, Object> map = new HashMap<>();
+            map.put("name", mPhoneView.getText().toString());
+            map.put("password", mFirstPassword.getText().toString());
             EasyHttp.post(this)
-                    .api(new RegisterApi()
-                            .setPhone(mPhoneView.getText().toString())
-                            .setCode(mCodeView.getText().toString())
-                            .setPassword(mFirstPassword.getText().toString()))
-                    .request(new HttpCallback<HttpData<RegisterApi.Bean>>(this) {
+                    .api("user/register")
+                    .json(map)
+                    .request(new HttpCallback<ApiResponse<String>>(this) {
 
                         @Override
                         public void onStart(Call call) {
@@ -159,16 +162,23 @@ public final class RegisterActivity extends AppActivity
                         public void onEnd(Call call) {}
 
                         @Override
-                        public void onSucceed(HttpData<RegisterApi.Bean> data) {
-                            postDelayed(() -> {
-                                mCommitView.showSucceed();
+                        public void onSucceed(ApiResponse<String> response) {
+                            if (response.getStatus() == 200) {
                                 postDelayed(() -> {
-                                    setResult(RESULT_OK, new Intent()
-                                            .putExtra(INTENT_KEY_PHONE, mPhoneView.getText().toString())
-                                            .putExtra(INTENT_KEY_PASSWORD, mFirstPassword.getText().toString()));
-                                    finish();
+                                    mCommitView.showSucceed();
+                                    postDelayed(() -> {
+                                        setResult(RESULT_OK, new Intent()
+                                                .putExtra(INTENT_KEY_PHONE, mPhoneView.getText().toString())
+                                                .putExtra(INTENT_KEY_PASSWORD, mFirstPassword.getText().toString()));
+                                        finish();
+                                    }, 1000);
                                 }, 1000);
-                            }, 1000);
+                            } else {
+                                toast(response.getMessage());
+                                postDelayed(() -> {
+                                    mCommitView.showError(3000);
+                                }, 1000);
+                            }
                         }
 
                         @Override

@@ -14,6 +14,22 @@ public interface Constants {
         String USER_ID = "USER_ID";
 
         String USER_PHONE = "USER_PHONE";
+
+        String SOURCE = "SOURCE";
+
+        String SOURCE_LIST = "SOURCE_LIST";
     }
+
+    interface Group {
+        //默认资源
+        int DEFAULT = 0;
+        //需要解析
+        int ANALYSIS = 1;
+
+        int NORMAL = 2;
+
+        int SPECIAL = 3;
+    }
+
 
 }

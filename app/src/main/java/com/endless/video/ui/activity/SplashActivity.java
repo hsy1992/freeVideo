@@ -10,16 +10,14 @@ import androidx.annotation.NonNull;
 import com.airbnb.lottie.LottieAnimationView;
 import com.blankj.utilcode.util.SPUtils;
 import com.blankj.utilcode.util.StringUtils;
-import com.endless.video.constants.Constants;
-import com.gyf.immersionbar.BarHide;
-import com.gyf.immersionbar.ImmersionBar;
 import com.endless.video.R;
 import com.endless.video.app.AppActivity;
-import com.endless.video.http.api.UserInfoApi;
-import com.endless.video.http.model.HttpData;
+import com.endless.video.constants.Constants;
 import com.endless.video.other.AppConfig;
-import com.hjq.http.EasyHttp;
-import com.hjq.http.listener.HttpCallback;
+import com.endless.video.ui.app.HomeActivity;
+import com.gyf.immersionbar.BarHide;
+import com.gyf.immersionbar.ImmersionBar;
+import com.hjq.http.EasyConfig;
 import com.hjq.widget.view.SlantedTextView;
 
 /**
@@ -48,9 +46,12 @@ public final class SplashActivity extends AppActivity {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mLottieView.removeAnimatorListener(this);
-                if (StringUtils.isEmpty(SPUtils.getInstance().getString(Constants.SPKey.USER_ID))) {
+                String token = SPUtils.getInstance().getString(Constants.SPKey.USER_ID);
+                if (StringUtils.isEmpty(token)) {
                     startActivity(LoginActivity.class);
                 } else {
+                    EasyConfig.getInstance()
+                            .addHeader("Authorization", token);
                     HomeActivity.start(getContext());
                 }
 

@@ -18,18 +18,22 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.gyf.immersionbar.ImmersionBar;
+import com.alibaba.fastjson.JSON;
+import com.blankj.utilcode.util.SPUtils;
 import com.endless.video.R;
 import com.endless.video.aop.Log;
 import com.endless.video.aop.SingleClick;
 import com.endless.video.app.AppActivity;
-import com.endless.video.http.api.LoginApi;
+import com.endless.video.constants.Constants;
+import com.endless.video.core.bean.ApiResponse;
+import com.endless.video.http.api.app.AppLoginApi;
 import com.endless.video.http.glide.GlideApp;
-import com.endless.video.http.model.HttpData;
 import com.endless.video.manager.InputTextManager;
 import com.endless.video.other.KeyboardWatcher;
-import com.endless.video.ui.fragment.MineFragment;
+import com.endless.video.ui.app.HomeActivity;
+import com.endless.video.ui.app.HomeFragment;
 import com.endless.video.wxapi.WXEntryActivity;
+import com.gyf.immersionbar.ImmersionBar;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.listener.HttpCallback;
@@ -41,10 +45,10 @@ import com.hjq.widget.view.SubmitButton;
 import okhttp3.Call;
 
 /**
- *    author : Android 轮子哥
- *    github : https://github.com/getActivity/AndroidProject
- *    time   : 2018/10/18
- *    desc   : 登录界面
+ * author : Android 轮子哥
+ * github : https://github.com/getActivity/AndroidProject
+ * time   : 2018/10/18
+ * desc   : 登录界面
  */
 public final class LoginActivity extends AppActivity
         implements UmengLogin.OnLoginListener,
@@ -78,9 +82,13 @@ public final class LoginActivity extends AppActivity
     private View mQQView;
     private View mWeChatView;
 
-    /** logo 缩放比例 */
+    /**
+     * logo 缩放比例
+     */
     private final float mLogoScale = 0.8f;
-    /** 动画时间 */
+    /**
+     * 动画时间
+     */
     private final int mAnimTime = 300;
 
     @Override
@@ -143,13 +151,13 @@ public final class LoginActivity extends AppActivity
         // 跳转到注册界面
         RegisterActivity.start(this, mPhoneView.getText().toString(),
                 mPasswordView.getText().toString(), (phone, password) -> {
-            // 如果已经注册成功，就执行登录操作
-            mPhoneView.setText(phone);
-            mPasswordView.setText(password);
-            mPasswordView.requestFocus();
-            mPasswordView.setSelection(mPasswordView.getText().length());
-            onClick(mCommitView);
-        });
+                    // 如果已经注册成功，就执行登录操作
+                    mPhoneView.setText(phone);
+                    mPasswordView.setText(password);
+                    mPasswordView.requestFocus();
+                    mPasswordView.setSelection(mPasswordView.getText().length());
+                    onClick(mCommitView);
+                });
     }
 
     @SingleClick
@@ -171,23 +179,22 @@ public final class LoginActivity extends AppActivity
             // 隐藏软键盘
             hideKeyboard(getCurrentFocus());
 
-            if (true) {
-                mCommitView.showProgress();
-                postDelayed(() -> {
-                    mCommitView.showSucceed();
-                    postDelayed(() -> {
-                        HomeActivity.start(getContext(), MineFragment.class);
-                        finish();
-                    }, 1000);
-                }, 2000);
-                return;
-            }
+//            if (true) {
+//                mCommitView.showProgress();
+//                postDelayed(() -> {
+//                    mCommitView.showSucceed();
+//                    postDelayed(() -> {
+//                        HomeActivity.start(getContext(), MineFragment.class);
+//                        finish();
+//                    }, 1000);
+//                }, 2000);
+//                return;
+//            }
 
             EasyHttp.post(this)
-                    .api(new LoginApi()
-                            .setPhone(mPhoneView.getText().toString())
-                            .setPassword(mPasswordView.getText().toString()))
-                    .request(new HttpCallback<HttpData<LoginApi.Bean>>(this) {
+                    .api("user/login")
+                    .json(JSON.toJSONString(new AppLoginApi(mPhoneView.getText().toString(), mPasswordView.getText().toString())))
+                    .request(new HttpCallback<ApiResponse<AppLoginApi.Bean>>(this) {
 
                         @Override
                         public void onStart(Call call) {
@@ -195,21 +202,30 @@ public final class LoginActivity extends AppActivity
                         }
 
                         @Override
-                        public void onEnd(Call call) {}
+                        public void onEnd(Call call) {
+                        }
 
                         @Override
-                        public void onSucceed(HttpData<LoginApi.Bean> data) {
+                        public void onSucceed(ApiResponse<AppLoginApi.Bean> data) {
                             // 更新 Token
-                            EasyConfig.getInstance()
-                                    .addParam("token", data.getData().getToken());
-                            postDelayed(() -> {
-                                mCommitView.showSucceed();
+                            toast(data.getMessage());
+                            if (data.getStatus() == 200) {
+                                SPUtils.getInstance().put(Constants.SPKey.USER_ID, data.getData().getToken());
+                                EasyConfig.getInstance()
+                                        .addHeader("Authorization", data.getData().getToken());
                                 postDelayed(() -> {
-                                    // 跳转到首页
-                                    HomeActivity.start(getContext(), MineFragment.class);
-                                    finish();
+                                    mCommitView.showSucceed();
+                                    postDelayed(() -> {
+                                        // 跳转到首页
+                                        HomeActivity.start(getContext());
+                                        finish();
+                                    }, 1000);
                                 }, 1000);
-                            }, 1000);
+                            } else {
+                                postDelayed(() -> {
+                                    mCommitView.showError(3000);
+                                }, 1000);
+                            }
                         }
 
                         @Override
@@ -252,8 +268,8 @@ public final class LoginActivity extends AppActivity
     /**
      * 授权成功的回调
      *
-     * @param platform      平台名称
-     * @param data          用户资料返回
+     * @param platform 平台名称
+     * @param data     用户资料返回
      */
     @Override
     public void onSucceed(Platform platform, UmengLogin.LoginData data) {
@@ -286,8 +302,8 @@ public final class LoginActivity extends AppActivity
     /**
      * 授权失败的回调
      *
-     * @param platform      平台名称
-     * @param t             错误原因
+     * @param platform 平台名称
+     * @param t        错误原因
      */
     @Override
     public void onError(Platform platform, Throwable t) {
